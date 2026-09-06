@@ -58,12 +58,20 @@ function ChallengeSuite:RequestEnable(id)
   SendAddonMessage(PREFIX, "ENABLE\t" .. id, "WHISPER", UnitName("player"))
 end
 
+local helloSent = false
+
 local frame = CreateFrame("Frame")
-frame:RegisterEvent("PLAYER_LOGIN")
+-- PLAYER_ENTERING_WORLD (not just PLAYER_LOGIN) so a HELLO/STATE resync also
+-- happens after /reload -- PLAYER_LOGIN only fires once per actual login, but
+-- addon reloads are constant during normal play and testing alike.
+frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:RegisterEvent("CHAT_MSG_ADDON")
 frame:SetScript("OnEvent", function(_, event, ...)
-  if event == "PLAYER_LOGIN" then
-    SendAddonMessage(PREFIX, "HELLO", "WHISPER", UnitName("player"))
+  if event == "PLAYER_ENTERING_WORLD" then
+    if not helloSent then
+      helloSent = true
+      SendAddonMessage(PREFIX, "HELLO", "WHISPER", UnitName("player"))
+    end
   elseif event == "CHAT_MSG_ADDON" then
     local prefix, message = ...
     if prefix == PREFIX then

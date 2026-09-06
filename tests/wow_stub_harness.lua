@@ -148,13 +148,21 @@ local function check(condition, label)
   end
 end
 
--- 1. PLAYER_LOGIN should send a HELLO addon message and register the minimap icon.
-BroadcastEvent("PLAYER_LOGIN")
-check(#sentMessages == 1, "exactly one addon message sent on PLAYER_LOGIN")
+-- 1. PLAYER_ENTERING_WORLD should send a HELLO addon message and register the
+-- minimap icon (also covers /reload, unlike PLAYER_LOGIN which only fires once
+-- per actual login).
+BroadcastEvent("PLAYER_ENTERING_WORLD")
+check(#sentMessages == 1, "exactly one addon message sent on PLAYER_ENTERING_WORLD")
 check(sentMessages[1].prefix == "CHALLENGE_SUITE", "HELLO message prefix")
 check(sentMessages[1].msg == "HELLO", "HELLO message body")
 check(sentMessages[1].channel == "WHISPER", "HELLO sent via WHISPER")
 check(sentMessages[1].target == "TestPlayer", "HELLO targets self")
+
+-- 1b. A second PLAYER_ENTERING_WORLD in the same session (e.g. a zone change,
+-- not a reload) must not re-send HELLO.
+sentMessages = {}
+BroadcastEvent("PLAYER_ENTERING_WORLD")
+check(#sentMessages == 0, "HELLO is not re-sent on a later PLAYER_ENTERING_WORLD")
 check(ChallengeSuiteDB ~= nil, "ChallengeSuiteDB initialized")
 
 -- 2. Simulate the server sending a STATE message.
