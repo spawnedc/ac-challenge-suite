@@ -65,7 +65,11 @@ local function EnsurePanel()
     return panel
   end
 
-  panel = CreateFrame("Frame", "ChallengeSuitePanel", UIParent, "BasicFrameTemplateWithInset")
+  -- No template: BasicFrameTemplateWithInset doesn't exist until Cataclysm's UI
+  -- revamp, and this addon targets 3.3.5a. SetBackdrop is a native Frame method
+  -- here (pre-BackdropTemplateMixin), so a plain frame + manual backdrop is the
+  -- standard idiom for this client era.
+  panel = CreateFrame("Frame", "ChallengeSuitePanel", UIParent)
   panel:SetSize(260, 100)
   panel:SetPoint("CENTER")
   panel:SetMovable(true)
@@ -73,11 +77,25 @@ local function EnsurePanel()
   panel:RegisterForDrag("LeftButton")
   panel:SetScript("OnDragStart", panel.StartMoving)
   panel:SetScript("OnDragStop", panel.StopMovingOrSizing)
+  panel:SetBackdrop({
+    bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+    edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+    tile = true,
+    tileSize = 32,
+    edgeSize = 32,
+    insets = { left = 11, right = 12, top = 12, bottom = 11 },
+  })
   panel:Hide()
 
   panel.title = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  panel.title:SetPoint("TOP", 0, -6)
+  panel.title:SetPoint("TOP", 0, -14)
   panel.title:SetText("Challenge Suite")
+
+  panel.closeButton = CreateFrame("Button", nil, panel, "UIPanelCloseButton")
+  panel.closeButton:SetPoint("TOPRIGHT", -4, -4)
+  panel.closeButton:SetScript("OnClick", function()
+    panel:Hide()
+  end)
 
   panel.rows = {}
   return panel

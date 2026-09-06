@@ -58,6 +58,7 @@ function FrameMeta:CreateFontString()
 end
 function FrameMeta:StartMoving() end
 function FrameMeta:StopMovingOrSizing() end
+function FrameMeta:SetBackdrop() end
 function FrameMeta:SetWidth() end
 function FrameMeta:SetFrameStrata() end
 function FrameMeta:SetFrameLevel() end
@@ -87,7 +88,20 @@ Minimap:SetSize(140, 140)
 
 local allFrames = {}
 
+-- Real 3.3.5a (build 12340) inherited UI templates this addon is allowed to use.
+-- CreateFrame() with any other template name errors out here, mirroring the
+-- client's own "Couldn't find inherited node" error -- this is what would have
+-- caught the BasicFrameTemplateWithInset bug (a Cataclysm-only template) before
+-- it reached a live client.
+local KNOWN_TEMPLATES = {
+  ["UIPanelCloseButton"] = true,
+  ["UIPanelButtonTemplate"] = true,
+}
+
 function CreateFrame(kind, name, parent, template)
+  if template and not KNOWN_TEMPLATES[template] then
+    error(('CreateFrame(): Couldn\'t find inherited node "%s"'):format(template), 2)
+  end
   local f = setmetatable({ kind = kind, name = name, parent = parent, _parent = parent, template = template }, FrameMeta)
   table.insert(allFrames, f)
   return f
